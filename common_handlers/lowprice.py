@@ -7,14 +7,14 @@ from time import sleep
 from loader import bot
 from states.lowprice_states import LowPriceStates
 
-from utils.misc.city_isalpha_filter import IsAlpha
-from utils.misc.hotels_amount_filter import HotelsInRange
-from utils.misc.images_amount_filter import ImagesInRange
+from utils.custom_filters.city_isalpha_filter import IsAlpha
+from utils.custom_filters.hotels_amount_filter import HotelsInRange
+from utils.custom_filters.images_amount_filter import ImagesInRange
 
-from handlers.get_city_info_handler import get_city_info_handler
-from handlers.get_regions_from_city_handler import get_regions_from_city_handler
-from handlers.get_hotel_info_handler import get_hotel_info_handler
-from handlers.get_images_url_handler import get_images_url_handler
+from custom_handlers.get_city_info_handler import get_city_info_handler
+from custom_handlers.get_regions_from_city_handler import get_regions_from_city_handler
+from custom_handlers.get_hotel_info_handler import get_hotel_info_handler
+from custom_handlers.get_images_url_handler import get_images_url_handler
 from utils.misc.date_reverser import date_reverser
 from utils.misc.description_maker import description_maker
 from utils.misc.hotel_description import hotel_description_maker
@@ -62,7 +62,8 @@ def city_name_asker(call: CallbackQuery) -> None:
     sleep(1)
     bot.send_message(
         call.from_user.id,
-        'Введите название города'
+        'Введите название города на русском\n<i>Важно: для российских городов поиск не работает</i>',
+        parse_mode='html'
     )
     bot.set_state(call.from_user.id, LowPriceStates.city)
 
@@ -89,7 +90,7 @@ def correct_city_handler(message: Message) -> ContinueHandling:
 @bot.message_handler(state=LowPriceStates.city, is_alpha=False)
 def incorrect_city_handler(message: Message) -> None:
     """
-    Обработчик, отправляющий клиента сообщение ошибки,
+    Обработчик, отправляющий клиенту сообщение ошибки,
     если в названии города есть цифры.
 
     """
@@ -261,11 +262,11 @@ def is_image_asker(message: Message) -> None:
 def incorrect_hotels_amount_handler(message: Message) -> None:
     """
     Обработчик, который отправляет сообщение ошибки, если клиентом не было
-    введено числовое значение в диапазоне от 0 до 10 на запрос количества
+    введено числовое значение в диапазоне от 1 до 10 на запрос количества
     отелей.
 
     """
-    bot.send_message(message.from_user.id, 'Что-то не то. Пожалуйста, введите числовое значение от 0 до 10')
+    bot.send_message(message.from_user.id, 'Что-то не то. Пожалуйста, введите числовое значение от 1 до 10')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == '1', state=LowPriceStates.is_image)
@@ -307,18 +308,16 @@ def hotels_list_sender(call: CallbackQuery) -> None:
         chat_id,
         is_image_message_id
     )
-    count = 0
 
-    for hotel in hotels_list:
-        count += 1
-        description = description_maker(hotels_info=hotel, count=count)
+    for count, hotel in enumerate(hotels_list):
+        description = description_maker(hotels_info=hotel, count=count + 1)
         bot.send_message(
             call.from_user.id,
             description,
             reply_markup=hotels_markup(hotel_info=hotel),
             parse_mode='html')
 
-        if hotels_amount == count:
+        if hotels_amount == count + 1:
             break
     bot.set_state(call.from_user.id, LowPriceStates.hotel)
 
@@ -339,28 +338,29 @@ def hotels_list_with_image_sender(message: Message) -> None:
     bot.send_message(message.from_user.id,
                      'Список отелей с краткой информацией и фотографиями\n(выберите подходящий вам):')
 
-    count = 0
     images_amount = int(message.text)
 
-    for hotel in hotels_list:
-        count += 1
+    for count, hotel in enumerate(hotels_list):
         wait_message_id = bot.send_message(message.from_user.id, 'Подождите...').message_id
         images_url_list = get_images_url_handler(hotel_id=hotel['id'], images_amount=images_amount)
         bot.delete_message(chat_id, wait_message_id)
 
         if isinstance(images_url_list, list):
-            for image_url in images_url_list:
-                bot.send_photo(chat_id, image_url)
-            description = description_maker(hotels_info=hotel, count=count)
+            bot.send_media_group(
+                chat_id,
+                [InputMediaPhoto(media=url, caption=description) for url, description in images_url_list])
+
+            description = description_maker(hotels_info=hotel, count=count + 1)
             bot.send_message(message.from_user.id,
                              description,
                              reply_markup=hotels_markup(hotel_info=hotel),
                              parse_mode='html',)
 
-            if hotels_amount == count:
+            if hotels_amount == count + 1:
                 break
         else:
             bot.send_message(message.from_user.id, images_url_list)
+            break
 
     bot.set_state(message.from_user.id, LowPriceStates.hotel)
 
@@ -369,11 +369,11 @@ def hotels_list_with_image_sender(message: Message) -> None:
 def incorrect_images_amount_handler(message: Message) -> None:
     """
     Обработчик, который отправляет сообщение ошибки, если клиентом не было
-    введено числовое значение в диапазоне от 0 до 15 на запрос количества
+    введено числовое значение в диапазоне от 1 до 10 на запрос количества
     фотографий.
 
     """
-    bot.send_message(message.from_user.id, 'Что-то не то. Пожалуйста, введите числовое значение от 0 до 15')
+    bot.send_message(message.from_user.id, 'Что-то не то. Пожалуйста, введите числовое значение от 1 до 10')
 
 
 @bot.callback_query_handler(func=lambda call: call.data != 'get_location', state=LowPriceStates.hotel)
@@ -422,4 +422,3 @@ bot.add_custom_filter(custom_filters.StateFilter(bot))
 bot.add_custom_filter(IsAlpha())
 bot.add_custom_filter(HotelsInRange())
 bot.add_custom_filter(ImagesInRange())
-

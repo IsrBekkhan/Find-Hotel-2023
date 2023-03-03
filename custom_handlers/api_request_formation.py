@@ -4,7 +4,12 @@ from requests.exceptions import RequestException
 from typing import Dict, Callable, Union
 
 
-def api_request(method_endswith: str, params: Dict, method_type: str, headers: Dict) -> Union[Callable, Exception]:
+def api_request(
+        method_endswith: str,
+        params: Dict,
+        method_type: str,
+        headers: Dict
+) -> Union[Callable, Exception]:
     """
     Функция, принимающая параметры для API-запроса, и, взависимости от значения
     method_type, возращающая одну из функций для GET или POST запроса.

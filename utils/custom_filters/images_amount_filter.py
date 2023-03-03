@@ -2,21 +2,21 @@ from telebot.custom_filters import SimpleCustomFilter
 from telebot.types import Message
 
 
-class HotelsInRange(SimpleCustomFilter):
+class ImagesInRange(SimpleCustomFilter):
     """
-    Класс HotelsInRange. Родитель: SimpleCustomFilter.
+    Класс ImagesInRange. Родитель: SimpleCustomFilter.
     Фильтр сообщений.
 
     """
-    key = 'hotels_amount'
+    key = 'images_amount'
 
     def check(self, message: Message) -> bool:
         """
         Функция, проверяющая является ли сообщение числом
-        из диапазона от 0 до 10.
+        из диапазона от 1 до 10.
 
         """
         if message.text.isdigit():
-            if 0 < int(message.text) <= 10:
+            if 1 < int(message.text) <= 10:
                 return True
         return False
