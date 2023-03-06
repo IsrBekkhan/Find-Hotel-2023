@@ -5,6 +5,10 @@ from loader import bot
 
 
 @bot.message_handler(commands=['help'])
-def bot_help(message: Message):
+def bot_help(message: Message) -> None:
+    """
+    Обработчик команды /help, которая отправляет клиенту сообщение со списком всех команд
+
+    """
     text = [f'/{command} - {desk}' for command, desk in DEFAULT_COMMANDS]
     bot.reply_to(message, '\n'.join(text))
