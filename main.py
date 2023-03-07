@@ -1,5 +1,5 @@
 from loader import bot
-from common_handlers import lowprice
+import common_handlers
 from common_handlers import default_heandlers
 from utils.set_bot_commands import set_default_commands
 

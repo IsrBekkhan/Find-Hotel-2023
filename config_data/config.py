@@ -12,5 +12,6 @@ RAPID_API_HOST = os.getenv('RAPID_API_HOST')
 DEFAULT_COMMANDS = (
     ('start', "Запустить бота"),
     ('lowprice', "Узнать топ самых дешёвых отелей в городе"),
+    ('highprice', "Узнать топ самых дорогих отелей в городе"),
     ('help', "Вывести справку")
 )

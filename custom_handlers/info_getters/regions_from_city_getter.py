@@ -20,7 +20,7 @@ def regions_from_city_getter(deserialized_response: Dict[str, Dict], city_name: 
             try:
                 hotels_neighborhood = hotels_properties['neighborhood']['name']
             except TypeError:
-                hotels_neighborhood = city_name
+                hotels_neighborhood = '{} (район не указан)'.format(city_name)
 
             curr_hotels_properties = {
                 'name': hotels_name,
