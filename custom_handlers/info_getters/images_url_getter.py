@@ -1,5 +1,6 @@
 from random import sample
 from typing import Union, List, Dict, Tuple
+from loguru import logger
 
 
 def images_url_getter(deserialized_response: Dict[str, Dict], images_amount: int) -> Union[List[Tuple], Exception]:
@@ -7,6 +8,7 @@ def images_url_getter(deserialized_response: Dict[str, Dict], images_amount: int
     Функция, возвращающая список кортежей с url-адресами и описанием фотографий соответственно, или, исключение.
 
     """
+    logger.info('Получение списка url-адресов фотографий отеля')
     try:
         images_category = deserialized_response['data']['propertyInfo']['propertyGallery']['images']
 
