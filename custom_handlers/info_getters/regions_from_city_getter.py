@@ -1,4 +1,5 @@
 from typing import Dict, Union
+from loguru import logger
 
 
 def regions_from_city_getter(deserialized_response: Dict[str, Dict], city_name: str) -> Union[Dict, Exception]:
@@ -6,6 +7,7 @@ def regions_from_city_getter(deserialized_response: Dict[str, Dict], city_name: 
     Функция, возвращающая словарь с информацией о всех найденных отелях города или исключение.
 
     """
+    logger.info('Получение информации о районах города {}'.format(city_name))
     regions_from_city_dict = dict()
     try:
         hotels_search_result = deserialized_response['data']['propertySearch']['properties']
@@ -20,7 +22,7 @@ def regions_from_city_getter(deserialized_response: Dict[str, Dict], city_name: 
             try:
                 hotels_neighborhood = hotels_properties['neighborhood']['name']
             except TypeError:
-                hotels_neighborhood = city_name
+                hotels_neighborhood = '{} (район не указан)'.format(city_name)
 
             curr_hotels_properties = {
                 'name': hotels_name,

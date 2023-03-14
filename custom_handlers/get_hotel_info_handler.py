@@ -5,6 +5,7 @@ from custom_handlers.request_utils.request_headers import post_request_headers
 from custom_handlers.info_getters.hotel_info_getter import hotel_info_getter
 from custom_handlers.exception_handling_decorator import exception_handling_decorator
 from typing import Callable, Union, Dict
+from loguru import logger
 
 
 @exception_handling_decorator
@@ -14,6 +15,7 @@ def get_hotel_info_handler(hotel_id: str) -> Union[Callable, Exception]:
     и возварщает функцию, получающую инфо об этом отеле из API-ответа.
 
     """
+    logger.info('Обработка запроса: id отеля - {}'.format(hotel_id))
     payload = payload_for_detail_setter(hotel_id=hotel_id)
     hotel_info_response: Union[Dict, Exception] = api_request(
         method_endswith=GET_HOTEL_INFO_ENDWITH,

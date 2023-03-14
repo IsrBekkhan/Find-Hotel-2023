@@ -1,9 +1,9 @@
 from telebot.handler_backends import State, StatesGroup
 
 
-class LowPriceStates(StatesGroup):
+class HighPriceStates(StatesGroup):
     """
-    Класс LowPriceStates. Родитель: StateGroup
+    Класс HighPriceStates. Родитель: StateGroup
     Класс состояний клиента.
 
     """
