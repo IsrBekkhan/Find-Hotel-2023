@@ -1,4 +1,5 @@
 from typing import Dict, Union
+from loguru import logger
 
 
 def hotel_info_getter(deserialized_response: Dict[str, Dict]) -> Union[Dict, Exception]:
@@ -6,6 +7,7 @@ def hotel_info_getter(deserialized_response: Dict[str, Dict]) -> Union[Dict, Exc
     Функция, возвращающая словарь с информацией об отеле или исключение.
 
     """
+    logger.info('Получение подробной информации об отеле')
     try:
         summary = deserialized_response['data']['propertyInfo']['summary']
         return {

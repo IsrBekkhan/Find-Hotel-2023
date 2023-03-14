@@ -2,8 +2,10 @@ import requests
 from requests import get, post
 from requests.exceptions import RequestException
 from typing import Dict, Callable, Union
+from loguru import logger
 
 
+@logger.catch
 def api_request(
         method_endswith: str,
         params: Dict,
@@ -15,6 +17,7 @@ def api_request(
     method_type, возращающая одну из функций для GET или POST запроса.
 
     """
+    logger.info('Формирование API-запроса')
     url = f"https://hotels4.p.rapidapi.com/{method_endswith}"
 
     if method_type == 'GET':
@@ -31,11 +34,13 @@ def api_request(
         )
 
 
+@logger.catch
 def get_request(url: str, params: Dict, headers: Dict) -> Union[Dict, Exception]:
     """
     Функция для GET-запроса.
 
     """
+    logger.info('Вызов GET-запроса')
     response = get(
         url,
         headers=headers,
@@ -47,11 +52,13 @@ def get_request(url: str, params: Dict, headers: Dict) -> Union[Dict, Exception]
     raise RequestException
 
 
+@logger.catch
 def post_request(url: str, headers: Dict, params: Dict) -> Union[Dict, Exception]:
     """
     Функция для POST-запроса.
 
     """
+    logger.info('Вызов POST-запроса')
     response = post(
         url=url,
         headers=headers,

@@ -1,4 +1,5 @@
 from typing import Dict, Union
+from loguru import logger
 
 
 def city_info_getter(deserialized_response: Dict[str, Dict], city: str) -> Union[Dict, Exception]:
@@ -6,6 +7,7 @@ def city_info_getter(deserialized_response: Dict[str, Dict], city: str) -> Union
     Функция, возвращающая словарь с информацией о городе или исключение.
 
     """
+    logger.info('Получение информации о городе {}'.format(city))
     search_results = deserialized_response.get('sr', None)
 
     if len(search_results) == 0:

@@ -6,6 +6,7 @@ from custom_handlers.info_getters.regions_from_city_getter import regions_from_c
 from custom_handlers.exception_handling_decorator import exception_handling_decorator
 from typing import Callable, Union, Dict
 from datetime import date
+from loguru import logger
 
 
 @exception_handling_decorator
@@ -20,6 +21,7 @@ def get_regions_from_city_handler(
     и возварщает функцию, получающую инфо об отелях этого города из API-ответа.
 
     """
+    logger.info('Обработка запроса: {}'.format(city_id))
     payload = payload_setter(city_id=city_id, check_in=check_in, check_out=check_out)
     regions_from_city_response: Union[Dict, Exception] = api_request(
         method_endswith=GET_HOTELS_LIST_ENDWITH,

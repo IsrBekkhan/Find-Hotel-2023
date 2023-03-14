@@ -1,3 +1,5 @@
+from loguru import logger
+
 from custom_handlers.api_request_formation import api_request
 from custom_handlers.request_utils.request_params import querystring_setter
 from custom_handlers.request_utils.request_methods import GET_CITYID_ENDWITH
@@ -14,6 +16,7 @@ def get_city_info_handler(city_name: str) -> Union[Callable, Exception]:
     и возварщает функцию, получающую инфо о городе из API-ответа.
 
     """
+    logger.info('Обработка запроса: {}'.format(city_name))
     querystring = querystring_setter(city=city_name)
     response_with_city_id: Union[Dict, Exception] = api_request(
         method_endswith=GET_CITYID_ENDWITH,

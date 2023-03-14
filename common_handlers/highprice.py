@@ -5,31 +5,31 @@ from loguru import logger
 from loader import bot
 from keyboards.inline.start import start_markup
 from states.common_states import CommonStates
-from states.lowprice_states import LowPriceStates
+from states.highprice_states import HighPriceStates
 
 
-@bot.message_handler(commands=['lowprice'])
+@bot.message_handler(commands=['highprice'])
 @logger.catch
 def bot_start(message: Message) -> None:
     """
-    Обработчик команды /lowprice, которая начинает процесс поиска топ
-    дешёвых отелей и отправляет клиенту inline-кнопку начала диалога.
+    Обработчик команды /highprice, которая начинает процесс поиска топ
+    дорогих отелей и отправляет клиенту inline-кнопку начала диалога.
 
     """
-    logger.info('Запуск диалога lowprice пользователем {}'.format(message.from_user.full_name))
+    logger.info('Запуск диалога highprice пользователем {}'.format(message.from_user.full_name))
     start_message_id = bot.send_message(
         message.from_user.id,
-        'Эта функция поможет вам найти топ самых дешёвых отелей интересующего вас города',
+        'Эта функция поможет вам найти топ самых дорогих отелей интересующего вас города',
         reply_markup=start_markup()
     ).message_id
     bot.set_state(message.from_user.id, CommonStates.start)
     with bot.retrieve_data(message.from_user.id) as message_data:
         message_data['start_message_id'] = start_message_id
         message_data['chat_id'] = message.chat.id
-        message_data['command'] = 'lowprice'
+        message_data['command'] = 'highprice'
 
 
-@bot.callback_query_handler(func=lambda call: True, state=LowPriceStates.region)
+@bot.callback_query_handler(func=lambda call: True, state=HighPriceStates.region)
 @logger.catch
 def hotels_amount_asker(call: CallbackQuery):
     """
@@ -37,10 +37,11 @@ def hotels_amount_asker(call: CallbackQuery):
     у клиента количество отелей для рассмотрения.
 
     """
-    logger.info('Сохранение списка отелей района {} по возрастанию цены '.format(call.data))
+    logger.info('Сохранение списка отелей района {} по убыванию цены '.format(call.data))
     with bot.retrieve_data(call.from_user.id) as search_data:
         hotels_from_region = search_data['regions'][call.data]
-        search_data['selected_region'] = hotels_from_region
+        reversed_hotels_list = sorted(hotels_from_region, key=lambda item: item['price'], reverse=True)
+        search_data['selected_region'] = reversed_hotels_list
         region_name_message_id = search_data['region_name_message_id']
         chat_id = search_data['chat_id']
 
