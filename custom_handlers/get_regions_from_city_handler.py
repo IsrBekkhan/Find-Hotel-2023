@@ -14,7 +14,10 @@ def get_regions_from_city_handler(
         city_id: str,
         city_name: str,
         check_in: date,
-        check_out: date
+        check_out: date,
+        min_price: int = 1,
+        max_price: int = 300,
+        sort_by: str = 'PRICE_LOW_TO_HIGH'
 ) -> Union[Callable, Exception]:
     """
     Функция, которая формирует API-запрос,
@@ -22,7 +25,12 @@ def get_regions_from_city_handler(
 
     """
     logger.info('Обработка запроса: {}'.format(city_id))
-    payload = payload_setter(city_id=city_id, check_in=check_in, check_out=check_out)
+    payload = payload_setter(city_id=city_id,
+                             check_in=check_in,
+                             check_out=check_out,
+                             min_price=min_price,
+                             max_price=max_price,
+                             sort_by=sort_by)
     regions_from_city_response: Union[Dict, Exception] = api_request(
         method_endswith=GET_HOTELS_LIST_ENDWITH,
         params=payload,

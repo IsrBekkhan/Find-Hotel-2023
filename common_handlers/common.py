@@ -1,5 +1,5 @@
 from telebot import custom_filters
-from telebot.types import Message, CallbackQuery, InputMediaPhoto
+from telebot.types import Message, CallbackQuery
 from telebot.handler_backends import ContinueHandling
 from datetime import date, timedelta
 from time import sleep
@@ -9,26 +9,28 @@ from loader import bot
 from states.common_states import CommonStates
 from states.lowprice_states import LowPriceStates
 from states.highprice_states import HighPriceStates
+from states.bestdeal_states import BestDealStates
+
+from custom_handlers.get_city_info_handler import get_city_info_handler
+from custom_handlers.get_regions_from_city_handler import get_regions_from_city_handler
+from custom_handlers.get_hotel_info_handler import get_hotel_info_handler
+from utils.misc.date_reverser import date_reverser
+from utils.misc.hotels_full_description import hotels_full_description_maker
+from utils.simple_hotels_list_sender import simple_hotels_list_sender
+from utils.hotels_list_with_images_sender import hotels_list_with_images_sender
+
+from telegram_bot_calendar import DetailedTelegramCalendar
+from keyboards.calendar_LSTEP_ru import LSTEP
+from keyboards.inline.regions import region_markup
+from keyboards.inline.yes_no import yes_no_markup
+from keyboards.inline.location import location_markup
 
 from utils.custom_filters.city_isalpha_filter import IsAlpha
 from utils.custom_filters.hotels_amount_filter import HotelsInRange
 from utils.custom_filters.images_amount_filter import ImagesInRange
 from utils.custom_filters.city_is_ru_filter import CityIsRu
-
-from custom_handlers.get_city_info_handler import get_city_info_handler
-from custom_handlers.get_regions_from_city_handler import get_regions_from_city_handler
-from custom_handlers.get_hotel_info_handler import get_hotel_info_handler
-from custom_handlers.get_images_url_handler import get_images_url_handler
-from utils.misc.date_reverser import date_reverser
-from utils.misc.description_maker import description_maker
-from utils.misc.hotel_description import hotel_description_maker
-
-from telegram_bot_calendar import DetailedTelegramCalendar
-from keyboards.calendar_LSTEP_ru import LSTEP
-from keyboards.inline.regions import region_markup
-from keyboards.inline.hotels import hotels_markup
-from keyboards.inline.yes_no import yes_no_markup
-from keyboards.inline.location import location_markup
+from utils.custom_filters.is_price_min import IsPriceMin
+from utils.custom_filters.is_price_max import IsPriceMax
 
 
 @bot.callback_query_handler(func=lambda call: True, state=CommonStates.start)
@@ -198,6 +200,11 @@ def check_out_date_handler(call: CallbackQuery) -> ContinueHandling:
                               call.message.message_id)
         with bot.retrieve_data(call.from_user.id) as search_data:
             search_data['check_out'] = result
+            command = search_data['command']
+
+        if command == '/bestdeal':
+            bot.set_state(call.from_user.id, BestDealStates.min_price)
+
         return ContinueHandling()
 
 
@@ -240,9 +247,9 @@ def region_asker(call: CallbackQuery):
             search_data['region_name_message_id'] = region_name_message_id
             command = search_data['command']
 
-        if command == 'lowprice':
+        if command == '/lowprice':
             bot.set_state(call.from_user.id, LowPriceStates.region)
-        elif command == 'highprice':
+        elif command == '/highprice':
             bot.set_state(call.from_user.id, HighPriceStates.region)
 
     else:
@@ -318,30 +325,25 @@ def hotels_list_sender(call: CallbackQuery) -> None:
     фотографий.
 
     """
+    logger.info('Подготовка списка отелей без фотографий для отправки пользователю {}'.format(
+        call.from_user.full_name))
     with bot.retrieve_data(call.from_user.id) as search_data:
         hotels_list = search_data['selected_region']
         hotels_amount = search_data['hotels_amount']
         is_image_message_id = search_data['is_image_message_id']
         chat_id = search_data['chat_id']
         days_amount = search_data['days_amount']
-    logger.info('Отправка пользователю {} списка отелей без фотографий'.format(call.from_user.full_name))
+
     bot.edit_message_text(
         'Список отелей с краткой информацией без фотографий\n(выберите подходящий вам):',
         chat_id,
         is_image_message_id
     )
-
-    for count, hotel in enumerate(hotels_list):
-        description = description_maker(hotels_info=hotel, count=count + 1, days=days_amount)
-        bot.send_message(
-            call.from_user.id,
-            description,
-            reply_markup=hotels_markup(hotel_info=hotel),
-            parse_mode='html')
-
-        if hotels_amount == count + 1:
-            break
-
+    simple_hotels_list_sender(hotels=hotels_list,
+                              days_amount=days_amount,
+                              user_id=call.from_user.id,
+                              user_name=call.from_user.full_name,
+                              hotels_amount=hotels_amount)
     logger.info('Отправка списка отелей без фотографий пользователю {} завершена'.format(call.from_user.full_name))
     bot.set_state(call.from_user.id, CommonStates.hotel)
 
@@ -355,40 +357,21 @@ def hotels_list_with_image_sender(message: Message) -> None:
     клиенту со список отелей и inline-кнопками для выбора.
 
     """
+    logger.info('Подготовка списка отелей с фотографиями для пользователя {}'.format(message.from_user.full_name))
     with bot.retrieve_data(message.from_user.id) as search_data:
         hotels_list = search_data['selected_region']
         hotels_amount = search_data['hotels_amount']
-        chat_id = search_data['chat_id']
         days_amount = search_data['days_amount']
-    logger.info('Отправка пользователю {} списка отелей с фотографиями'.format(message.from_user.full_name))
+
     bot.send_message(message.from_user.id,
                      'Список отелей с краткой информацией и фотографиями\n(выберите подходящий вам):')
-
-    images_amount = int(message.text)
-
-    for count, hotel in enumerate(hotels_list):
-        wait_message_id = bot.send_message(message.from_user.id, 'Подождите...').message_id
-        images_url_list = get_images_url_handler(hotel_id=hotel['id'], images_amount=images_amount)
-        bot.delete_message(chat_id, wait_message_id)
-
-        if isinstance(images_url_list, list):
-            bot.send_media_group(
-                chat_id,
-                [InputMediaPhoto(media=url, caption=description) for url, description in images_url_list])
-
-            description = description_maker(hotels_info=hotel, count=count + 1, days=days_amount)
-            bot.send_message(message.from_user.id,
-                             description,
-                             reply_markup=hotels_markup(hotel_info=hotel),
-                             parse_mode='html',)
-
-            if hotels_amount == count + 1:
-                break
-        else:
-            logger.info('Отправка пользователю {user_name} сообщения об ошибке'.format(
-                user_name=message.from_user.full_name))
-            bot.send_message(message.from_user.id, images_url_list)
-
+    hotels_list_with_images_sender(hotels=hotels_list,
+                                   user_id=message.from_user.id,
+                                   images_amount=int(message.text),
+                                   chat_id=message.chat.id,
+                                   user_name=message.from_user.full_name,
+                                   days_amount=days_amount,
+                                   hotels_amount=hotels_amount)
     logger.info('Отправка списка отелей с фотографиями пользователю {} завершена'.format(message.from_user.full_name))
     bot.set_state(message.from_user.id, CommonStates.hotel)
 
@@ -431,7 +414,7 @@ def hotel_id_handler(call: CallbackQuery) -> None:
             user_name=call.from_user.full_name,
             hotel_name=hotel_info['name']))
         map_image_url = hotel_info['map_image']
-        hotel_description = hotel_description_maker(hotel_info=hotel_info)
+        hotel_description = hotels_full_description_maker(hotel_info=hotel_info)
         bot.send_photo(chat_id,
                        photo=map_image_url,
                        caption=hotel_description,
@@ -467,3 +450,5 @@ bot.add_custom_filter(IsAlpha())
 bot.add_custom_filter(HotelsInRange())
 bot.add_custom_filter(ImagesInRange())
 bot.add_custom_filter(CityIsRu())
+bot.add_custom_filter(IsPriceMin())
+bot.add_custom_filter(IsPriceMax())

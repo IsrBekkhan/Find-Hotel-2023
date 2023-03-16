@@ -28,8 +28,15 @@ def querystring_setter(city: str, language: str = 'ru_RU') -> Dict:
 
 
 @logger.catch
-def payload_setter(city_id: str, check_in: date, check_out: date, language: str = 'ru_RU',
-                   currency: str = 'USD') -> Dict:
+def payload_setter(city_id: str,
+                   check_in: date,
+                   check_out: date,
+                   min_price: int,
+                   max_price: int,
+                   sort_by: str,
+                   language: str = 'ru_RU',
+                   currency: str = 'USD',
+                   ) -> Dict:
     """
     Функия, возвращающая словарь с параметрами для POST-запроса.
 
@@ -61,10 +68,10 @@ def payload_setter(city_id: str, check_in: date, check_out: date, language: str 
         ],
         "resultsStartingIndex": 0,
         "resultsSize": 200,
-        "sort": "PRICE_LOW_TO_HIGH",
+        "sort": sort_by,
         "filters": {"price": {
-            "max": 150,
-            "min": 100
+            "max": max_price,
+            "min": min_price
         }}
     }
 
