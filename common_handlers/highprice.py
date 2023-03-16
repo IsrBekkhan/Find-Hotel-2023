@@ -10,7 +10,7 @@ from states.highprice_states import HighPriceStates
 
 @bot.message_handler(commands=['highprice'])
 @logger.catch
-def bot_start(message: Message) -> None:
+def high_price_start(message: Message) -> None:
     """
     Обработчик команды /highprice, которая начинает процесс поиска топ
     дорогих отелей и отправляет клиенту inline-кнопку начала диалога.
@@ -26,7 +26,7 @@ def bot_start(message: Message) -> None:
     with bot.retrieve_data(message.from_user.id) as message_data:
         message_data['start_message_id'] = start_message_id
         message_data['chat_id'] = message.chat.id
-        message_data['command'] = 'highprice'
+        message_data['command'] = message.text
 
 
 @bot.callback_query_handler(func=lambda call: True, state=HighPriceStates.region)
