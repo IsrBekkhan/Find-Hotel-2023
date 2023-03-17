@@ -1,7 +1,7 @@
 from typing import Dict
 
 
-def hotel_description_maker(hotel_info: Dict) -> str:
+def hotels_full_description_maker(hotel_info: Dict) -> str:
     """
     Функция, возвращающая строку с информацией об отеле.
 
