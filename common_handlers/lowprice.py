@@ -39,6 +39,7 @@ def hotels_amount_asker(call: CallbackQuery):
     """
     logger.info('Сохранение списка отелей района {} по возрастанию цены '.format(call.data))
     with bot.retrieve_data(call.from_user.id) as search_data:
+        search_data['region_name'] = call.data
         hotels_from_region = search_data['regions'][call.data]
         search_data['selected_region'] = hotels_from_region
         region_name_message_id = search_data['region_name_message_id']
