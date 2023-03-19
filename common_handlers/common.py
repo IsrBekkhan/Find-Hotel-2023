@@ -1,7 +1,9 @@
+import datetime
+
 from telebot import custom_filters
 from telebot.types import Message, CallbackQuery
 from telebot.handler_backends import ContinueHandling
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from time import sleep
 from loguru import logger
 
@@ -31,6 +33,8 @@ from utils.custom_filters.images_amount_filter import ImagesInRange
 from utils.custom_filters.city_is_ru_filter import CityIsRu
 from utils.custom_filters.is_price_min import IsPriceMin
 from utils.custom_filters.is_price_max import IsPriceMax
+
+from database.database_core import SearchHistory, db
 
 
 @bot.callback_query_handler(func=lambda call: True, state=CommonStates.start)
@@ -409,6 +413,8 @@ def hotel_id_handler(call: CallbackQuery) -> None:
     if isinstance(hotel_info, dict):
         with bot.retrieve_data(call.from_user.id) as search_data:
             search_data['hotel_info'] = hotel_info
+            city_info = search_data['city_info']
+            selected_region = search_data['region_name']
 
         logger.info('Отправка пользователю {user_name} подробной информации об отеле {hotel_name}'.format(
             user_name=call.from_user.full_name,
@@ -420,6 +426,16 @@ def hotel_id_handler(call: CallbackQuery) -> None:
                        caption=hotel_description,
                        parse_mode='html',
                        reply_markup=location_markup())
+        logger.info('Добавление записи текущего поиска пользователя {} в базу данных'.format(call.from_user.full_name))
+
+        with db:
+            SearchHistory.create(user_id=call.from_user.id,
+                                 user_name=call.from_user.full_name,
+                                 datetime_of_search=datetime.now(),
+                                 city_name=city_info['city'],
+                                 region=selected_region,
+                                 hotel_name=hotel_info['name'],
+                                 hotel_id=int(call.data))
     else:
         logger.info('Отправка пользователю {user_name} сообщения об ошибке'.format(
             user_name=call.from_user.full_name))

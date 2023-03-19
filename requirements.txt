@@ -3,6 +3,7 @@ python-dotenv==0.21.0
 requests==2.28.2
 python-telegram-calendar==1.0.5
 loguru==0.6.0
+peewee==3.16.0
 
 pip==22.3.1
 certifi==2022.12.7
