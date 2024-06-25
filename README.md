@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-<img src=".bot_screens.png" width="100%"></p>
+<img src="bot_screens.png" width="100%"></p>
 
 ## Описание телеграмм-бота
 
