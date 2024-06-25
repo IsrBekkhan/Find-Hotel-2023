@@ -7,6 +7,7 @@
 
 <img alt="Static Badge" src="https://img.shields.io/badge/pyTelegramBotAPI-4.8.0-white?logo=telegram&logoColor=white&labelColor=%2326A5E4">
 
+<img alt="Static Badge" src="https://img.shields.io/badge/peewee-3.16.0-white?logoColor=white&labelColor=gray">
 
 </p>
 
