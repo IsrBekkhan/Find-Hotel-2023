@@ -5,6 +5,9 @@
 
 <img alt="Static Badge" src="https://img.shields.io/badge/Python-3.10-%23EAD248?logo=python&logoColor=white&labelColor=%233776AB">
 
+<img alt="Static Badge" src="https://img.shields.io/badge/pyTelegramBotAPI-4.8.0-white?logo=telegram&logoColor=white&labelColor=%2326A5E4">
+
+
 </p>
 
 <p align="center">
